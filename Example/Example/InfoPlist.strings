@@ -1,0 +1,9 @@
+/* 
+  InfoPlist.strings
+  Example
+
+  Created by 解 磊 on 2017/6/15.
+  Copyright © 2017年 AppLeg Corp. All rights reserved.
+*/
+
+CFBundleDisplayName = "Ring Label";
