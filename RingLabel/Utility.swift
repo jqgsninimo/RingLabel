@@ -8,7 +8,7 @@
 
 import Foundation
 
-extension String.CharacterView {
+extension String {
     /// 获取字符下标
     ///
     /// - Parameter index: 字符索引

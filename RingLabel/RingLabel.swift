@@ -14,7 +14,7 @@ import SnapKit
     /// 文本（默认为空字符串）
     @IBInspectable public var text: String = "" {
         didSet {
-            for character in "\n\r\t".characters {
+            for character in "\n\r\t" {
                 self.text = self.text.replacingOccurrences(of: String(character), with: " ")
             }
         }
@@ -158,7 +158,7 @@ extension RingLabel: UICollectionViewDataSource {
     }
     
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return section == 0 ? self.text.characters.count : 3
+        return section == 0 ? self.text.count : 3
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -179,7 +179,7 @@ extension RingLabel: UICollectionViewDataSource {
             label.snp.makeConstraints({ $0.edges.equalToSuperview() })
         }
         
-        label.text = indexPath.section == 0 ? String(self.text.characters[indexPath.item]) : "."
+        label.text = indexPath.section == 0 ? String(self.text[indexPath.item]) : "."
         
         return cell
     }
@@ -210,16 +210,16 @@ extension RingLabel {
         if let textHeightFactor = self.textHeightFactor {
             let textHeight = self.drawingRadius * textHeightFactor
             var fontSize = textHeight
-            var textSize = self.text.size(attributes: [NSFontAttributeName: font.withSize(fontSize)])
+            var textSize = self.text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font.withSize(fontSize)]))
             if textSize.height > textHeight {
                 repeat {
                     fontSize -= 1
-                    textSize = self.text.size(attributes: [NSFontAttributeName: font.withSize(fontSize)])
+                    textSize = self.text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font.withSize(fontSize)]))
                 } while textSize.height > textHeight
             } else {
                 repeat {
                     fontSize += 1
-                    textSize = self.text.size(attributes: [NSFontAttributeName: font.withSize(fontSize)])
+                    textSize = self.text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font.withSize(fontSize)]))
                 } while textSize.height < textHeight
                 fontSize -= 1
             }
@@ -275,13 +275,13 @@ private class RingLabelLayout: UICollectionViewLayout {
         // 调整字体尺寸
         repeat {
             // 按照指定字体绘制文本所需的尺寸
-            textSize = ringLabel.text.size(attributes: [NSFontAttributeName: font])
+            textSize = ringLabel.text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
             // 文字内沿半径，从圆心到文字内沿的长度
             innerRadius = radius - textSize.height
             // 考虑有效因子，文字最多可用的显示宽度
             let maxArcLength = innerRadius * CGFloat.pi * 2 * (1 - ringLabel.spaceFactor)
-            maxTextSize.width = ringLabel.text.characters.reduce(0, { (width, character) -> CGFloat in
-                let characterWidth = String(character).size(attributes: [NSFontAttributeName: font]).width
+            maxTextSize.width = ringLabel.text.reduce(0, { (width, character) -> CGFloat in
+                let characterWidth = String(character).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font])).width
                 let arcLength = maxArcLength * characterWidth / textSize.width
                 return width + 2 * innerRadius * tan(arcLength / innerRadius / 2)
             })
@@ -311,8 +311,8 @@ private class RingLabelLayout: UICollectionViewLayout {
         let (omittedRange, ellipsisHidden, text) = self.omitText(ringLabel.text, withFont: font, andBreakMode: ringLabel.lineBreakMode, toFitWidth: maxTextSize.width)
         
         // 计算文字描绘角度
-        let textAngle = text.characters.reduce(0) { (textAngle, character) -> CGFloat in
-            let characterWidth = String(character).size(attributes: [NSFontAttributeName: font]).width
+        let textAngle = text.reduce(0) { (textAngle, character) -> CGFloat in
+            let characterWidth = String(character).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font])).width
             let characterAngle = atan(characterWidth / innerRadius / 2) * 2
             return textAngle + characterAngle
         }
@@ -336,7 +336,7 @@ private class RingLabelLayout: UICollectionViewLayout {
         let generateLayoutAttributes = { (character: Character, indexPath: IndexPath, hidden: Bool) in
             let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
             
-            let size = String(character).size(attributes: [NSFontAttributeName: font])
+            let size = String(character).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
             attributes.size = size
             
             let center = ringLabel.bounds.center
@@ -387,7 +387,7 @@ private class RingLabelLayout: UICollectionViewLayout {
         // 调整字体尺寸
         repeat {
             // 按照指定字体绘制文本所需的尺寸
-            textSize = ringLabel.text.size(attributes: [NSFontAttributeName: font])
+            textSize = ringLabel.text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
             
             // 调整字体适应高度
             if textSize.height > maxTextSize.height {
@@ -413,7 +413,7 @@ private class RingLabelLayout: UICollectionViewLayout {
         let (omittedRange, ellipsisHidden, text) = self.omitText(ringLabel.text, withFont: font, andBreakMode: ringLabel.lineBreakMode, toFitWidth: maxTextSize.width)
         
         // 计算文字描绘尺寸
-        textSize = text.size(attributes: [NSFontAttributeName: font])
+        textSize = text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
         // 根据基准角度和文字对齐方式调整开始位置
         // 根据基准角度确定显示方位
         enum Direction: Int {case right, bottom, left, top}
@@ -448,7 +448,7 @@ private class RingLabelLayout: UICollectionViewLayout {
         let generateLayoutAttributes = { (character: Character, indexPath: IndexPath, hidden: Bool) in
             let attributes = UICollectionViewLayoutAttributes(forCellWith: indexPath)
             
-            let size = String(character).size(attributes: [NSFontAttributeName: font])
+            let size = String(character).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
             attributes.size = size
             
             if hidden {
@@ -498,7 +498,7 @@ private class RingLabelLayout: UICollectionViewLayout {
         var omittedText = text
         
         // 按照指定字体绘制文本所需的尺寸
-        var textSize = text.size(attributes: [NSFontAttributeName: font])
+        var textSize = text.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
         // 如果文本显示不全，省略或截断文本
         if textSize.width > limitWidth {
             ellipsisHidden = false
@@ -507,8 +507,8 @@ private class RingLabelLayout: UICollectionViewLayout {
                 // 首部省略
                 var startIndex = text.index(after: text.startIndex)
                 while startIndex != text.endIndex {
-                    omittedText = ellipsis + text.substring(from: startIndex)
-                    textSize = omittedText.size(attributes: [NSFontAttributeName: font])
+                    omittedText = ellipsis + text[startIndex...]
+                    textSize = omittedText.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
                     if textSize.width < limitWidth {
                         break
                     }
@@ -521,10 +521,10 @@ private class RingLabelLayout: UICollectionViewLayout {
                 var rightStartIndex = text.endIndex
                 var leftChanged = true
                 while leftEndIndex != rightStartIndex {
-                    let leftText = text.substring(with: text.startIndex..<leftEndIndex)
-                    let rightText = text.substring(with: rightStartIndex..<text.endIndex)
+                    let leftText = text[text.startIndex..<leftEndIndex]
+                    let rightText = text[rightStartIndex..<text.endIndex]
                     omittedText = leftText + ellipsis + rightText
-                    textSize = omittedText.size(attributes: [NSFontAttributeName: font])
+                    textSize = omittedText.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
                     if textSize.width > limitWidth {
                         if leftChanged {
                             leftEndIndex = text.index(before: leftEndIndex)
@@ -534,8 +534,8 @@ private class RingLabelLayout: UICollectionViewLayout {
                         break
                     }
                     
-                    let leftSize = leftText.size(attributes: [NSFontAttributeName: font])
-                    let rightSize = rightText.size(attributes: [NSFontAttributeName: font])
+                    let leftSize = String(leftText).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
+                    let rightSize = String(rightText).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
                     if leftSize.width < rightSize.width {
                         leftChanged = true
                         leftEndIndex = text.index(after: leftEndIndex)
@@ -549,8 +549,8 @@ private class RingLabelLayout: UICollectionViewLayout {
                 // 尾部省略
                 var endIndex = text.index(before: text.endIndex)
                 while endIndex != text.startIndex {
-                    omittedText = text.substring(to: endIndex) + ellipsis
-                    textSize = omittedText.size(attributes: [NSFontAttributeName: font])
+                    omittedText = text[..<endIndex] + ellipsis
+                    textSize = omittedText.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
                     if textSize.width < limitWidth {
                         break
                     }
@@ -562,8 +562,8 @@ private class RingLabelLayout: UICollectionViewLayout {
                 ellipsisHidden = true
                 var endIndex = text.index(before: text.endIndex)
                 while endIndex != text.startIndex {
-                    omittedText = text.substring(to: endIndex)
-                    textSize = omittedText.size(attributes: [NSFontAttributeName: font])
+                    omittedText = String(text[..<endIndex])
+                    textSize = omittedText.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]))
                     if textSize.width < limitWidth {
                         break
                     }
@@ -576,4 +576,15 @@ private class RingLabelLayout: UICollectionViewLayout {
         omittedText = text.replacingCharacters(in: omittedRange, with: ellipsisHidden ? "" : ellipsis)
         return (omittedRange, ellipsisHidden, omittedText)
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToOptionalNSAttributedStringKeyDictionary(_ input: [String: Any]?) -> [NSAttributedString.Key: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
+	return input.rawValue
 }
